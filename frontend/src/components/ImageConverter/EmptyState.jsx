@@ -82,16 +82,16 @@ export default function EmptyState({ fromFormat, toFormat }) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-gray-700 font-medium">
             <div className="bg-white/90 p-3 rounded-2xl border border-orange-100/90 shadow-2xs hover:scale-[1.02] transition-transform">
-              <strong className="text-orange-600">PNG →</strong> JPG, WebP, BMP
+              <strong className="text-orange-600">PNG →</strong> JPG, WebP, PDF, BMP
             </div>
             <div className="bg-white/90 p-3 rounded-2xl border border-orange-100/90 shadow-2xs hover:scale-[1.02] transition-transform">
-              <strong className="text-orange-600">JPG →</strong> PNG, WebP, BMP
+              <strong className="text-orange-600">JPG →</strong> PNG, WebP, PDF, BMP
             </div>
             <div className="bg-white/90 p-3 rounded-2xl border border-orange-100/90 shadow-2xs hover:scale-[1.02] transition-transform">
-              <strong className="text-orange-600">WebP →</strong> JPG, PNG, BMP
+              <strong className="text-orange-600">WebP →</strong> JPG, PNG, PDF, BMP
             </div>
             <div className="bg-white/90 p-3 rounded-2xl border border-orange-100/90 shadow-2xs hover:scale-[1.02] transition-transform">
-              <strong className="text-orange-600">BMP / GIF / SVG →</strong> JPG, PNG, WebP
+              <strong className="text-orange-600">BMP / GIF / SVG →</strong> PDF, JPG, PNG, WebP
             </div>
           </div>
         )}

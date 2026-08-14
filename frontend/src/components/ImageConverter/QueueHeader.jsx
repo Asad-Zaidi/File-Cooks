@@ -5,6 +5,9 @@ import {
   FaTrashAlt,
   FaChevronDown,
   FaLayerGroup,
+  FaFilePdf,
+  FaThLarge,
+  FaList,
 } from 'react-icons/fa';
 import { formatBytes } from '../../utils/filenameUtils';
 import { CONVERTER_CONFIG } from '../../services/converterConfig';
@@ -16,9 +19,13 @@ export default function QueueHeader({
   onGlobalFormatChange,
   onConvertAll,
   onDownloadZip,
+  onDownloadCombinedPdf,
+  isGeneratingCombinedPdf,
   onClearAll,
   isProcessingBatch,
   completedCount,
+  viewMode = 'grid',
+  onViewModeChange,
 }) {
   return (
     <div className="bg-white/95 backdrop-blur-md border border-gray-200/90 rounded-3xl p-5 md:p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
@@ -44,6 +51,38 @@ export default function QueueHeader({
 
       {/* Right: Format Selector & Quick Actions */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* Grid / List View Mode Toggle */}
+        {onViewModeChange && (
+          <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => onViewModeChange('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+                viewMode === 'grid'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+              title="Grid View"
+            >
+              <FaThLarge size={12} />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewModeChange('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+                viewMode === 'list'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+              title="List View"
+            >
+              <FaList size={12} />
+              <span className="hidden sm:inline">List</span>
+            </button>
+          </div>
+        )}
+
         {/* Global Format Selector */}
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200/90 px-3.5 py-2 rounded-2xl">
           <label className="text-xs font-extrabold text-gray-700 whitespace-nowrap">
@@ -78,6 +117,20 @@ export default function QueueHeader({
           <FaPlay size={10} className={isProcessingBatch ? 'animate-spin' : ''} />
           <span>{isProcessingBatch ? 'Converting Batch...' : 'Convert All Now'}</span>
         </button>
+
+        {/* Combine into Single PDF Button */}
+        {onDownloadCombinedPdf && (
+          <button
+            type="button"
+            onClick={onDownloadCombinedPdf}
+            disabled={isProcessingBatch || isGeneratingCombinedPdf || itemsCount === 0}
+            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-xs shadow-md shadow-red-600/20 hover:shadow-lg transition-all flex items-center gap-2 animate-fade-in disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Combine all queue images into a single multi-page PDF document"
+          >
+            <FaFilePdf size={13} className={isGeneratingCombinedPdf ? 'animate-spin' : ''} />
+            <span>{isGeneratingCombinedPdf ? 'Creating PDF...' : `Combine into 1 PDF (${itemsCount})`}</span>
+          </button>
+        )}
 
         {/* Download ZIP Button */}
         {completedCount > 0 && (

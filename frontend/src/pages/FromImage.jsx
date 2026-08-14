@@ -31,6 +31,8 @@ const FromImage = () => {
   const toUpper = toParam ? toParam.toUpperCase() : null;
   const isSpecificRoute = fromUpper && toUpper;
 
+  const [viewMode, setViewMode] = React.useState('grid');
+
   const {
     items,
     globalTargetFormat,
@@ -48,6 +50,8 @@ const FromImage = () => {
     convertAllItems,
     downloadSingleItem,
     downloadAllZip,
+    downloadCombinedPdf,
+    isGeneratingCombinedPdf,
   } = useImageConverter();
 
   const totalSizeBytes = items.reduce((acc, i) => acc + (i.originalSize || 0), 0);
@@ -61,7 +65,7 @@ const FromImage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50/50 via-white to-gray-50/80 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-full mx-auto px-8 lg:px-32">
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100/90 text-orange-600 text-xs font-black uppercase tracking-wider mb-4 border border-orange-200/80 shadow-2xs">
@@ -126,33 +130,18 @@ const FromImage = () => {
           )}
         </div>
 
-        {/* Upload Dropzone (Restricted to fromFormat when specific route) */}
-        <div className="mb-8">
-          <ImageUploader
-            onFilesSelected={addFiles}
-            hasFiles={items.length > 0}
-            fromFormat={fromParam}
-            toFormat={toParam}
-          />
-        </div>
-
-        {/* Active Queue Section */}
-        {items.length > 0 && (
-          <div className="animate-fade-in">
-            {/* Conversion Controls & Quality Settings */}
-            <ConversionSettings
-              settings={globalSettings}
-              onSettingsChange={setGlobalSettings}
-              currentTargetFormat={globalTargetFormat}
+        {/* Main Content Area: Show Hero Upload Box when empty, or Images Grid in place when files uploaded */}
+        {items.length === 0 ? (
+          <div className="mb-8">
+            <ImageUploader
+              onFilesSelected={addFiles}
+              hasFiles={false}
+              fromFormat={fromParam}
+              toFormat={toParam}
             />
-
-            {/* Batch Progress Bar */}
-            <ProgressBar
-              progress={batchProgress}
-              isProcessing={isProcessingBatch}
-              totalCount={items.length}
-            />
-
+          </div>
+        ) : (
+          <div className="animate-fade-in mb-8">
             {/* Queue Header & Global Controls */}
             <QueueHeader
               itemsCount={items.length}
@@ -161,17 +150,28 @@ const FromImage = () => {
               onGlobalFormatChange={updateGlobalTargetFormat}
               onConvertAll={convertAllItems}
               onDownloadZip={downloadAllZip}
+              onDownloadCombinedPdf={downloadCombinedPdf}
+              isGeneratingCombinedPdf={isGeneratingCombinedPdf}
               onClearAll={clearAll}
               isProcessingBatch={isProcessingBatch}
               completedCount={completedCount}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
             />
 
-            {/* Queue Cards List */}
-            <div className="space-y-3.5 mb-12">
+            {/* Queue Cards Grid / List (In place of Upload Box) */}
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-6'
+                  : 'space-y-3.5 mb-6'
+              }
+            >
               {items.map((item) => (
                 <ImageCard
                   key={item.id}
                   item={item}
+                  viewMode={viewMode}
                   onTargetFormatChange={setItemTargetFormat}
                   onConvertSingle={convertSingleItem}
                   onDownloadSingle={downloadSingleItem}
@@ -179,6 +179,30 @@ const FromImage = () => {
                   onRotateSingle={rotateItem}
                 />
               ))}
+            </div>
+
+            {/* Batch Progress Bar */}
+            <ProgressBar
+              progress={batchProgress}
+              isProcessing={isProcessingBatch}
+              totalCount={items.length}
+            />
+
+            {/* Conversion Controls & Quality Settings */}
+            <ConversionSettings
+              settings={globalSettings}
+              onSettingsChange={setGlobalSettings}
+              currentTargetFormat={globalTargetFormat}
+            />
+
+            {/* Add More Images Bar */}
+            <div className="mt-6">
+              <ImageUploader
+                onFilesSelected={addFiles}
+                hasFiles={true}
+                fromFormat={fromParam}
+                toFormat={toParam}
+              />
             </div>
           </div>
         )}
@@ -254,6 +278,15 @@ const FromImage = () => {
                     <td className="py-3 px-4 text-emerald-600 font-bold">Universal</td>
                   </tr>
                 )}
+                {(!isSpecificRoute || fromUpper === 'PDF' || toUpper === 'PDF') && (
+                  <tr className="hover:bg-orange-50/30 transition-colors">
+                    <td className="py-3 px-4 font-black text-orange-600">PDF</td>
+                    <td className="py-3 px-4">Print Documents, Portfolios & Sharing</td>
+                    <td className="py-3 px-4 text-gray-400">No (Solid Page Fill)</td>
+                    <td className="py-3 px-4">JPEG / High Resolution Encoded</td>
+                    <td className="py-3 px-4 text-emerald-600 font-bold">Universal Reader Support</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -318,9 +351,8 @@ function FaqCard({ question, answer }) {
         <span>{question}</span>
         <FaChevronDown
           size={12}
-          className={`text-gray-400 transition-transform duration-200 ${
-            open ? 'rotate-180 text-orange-500' : ''
-          }`}
+          className={`text-gray-400 transition-transform duration-200 ${open ? 'rotate-180 text-orange-500' : ''
+            }`}
         />
       </div>
       {open && (

@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateImageFile } from '../utils/fileValidation';
 import { loadImageElement } from '../utils/imageUtils';
-import { convertImage } from '../services/imageConverter';
+import { convertImage, convertImagesToSinglePdf } from '../services/imageConverter';
 import { downloadImagesAsZip } from '../services/zipService';
 import { replaceFileExtension } from '../utils/filenameUtils';
 import { CONVERTER_CONFIG } from '../services/converterConfig';
@@ -359,6 +359,44 @@ export function useImageConverter() {
     document.body.removeChild(a);
   }, [items]);
 
+  const [isGeneratingCombinedPdf, setIsGeneratingCombinedPdf] = useState(false);
+
+  /**
+   * Combines all valid queue images into a single multi-page PDF document and triggers download.
+   */
+  const downloadCombinedPdf = useCallback(async () => {
+    const validItems = items.filter((item) => item.file && item.status !== 'error');
+    if (validItems.length === 0) return;
+
+    try {
+      setIsGeneratingCombinedPdf(true);
+      const pdfBlob = await convertImagesToSinglePdf({
+        items: validItems,
+        quality: globalSettings.quality,
+        backgroundColor: globalSettings.backgroundColor,
+        scalePercent: globalSettings.scalePercent,
+        globalRotation: globalSettings.rotation,
+      });
+
+      const firstItemName = validItems[0]?.name || 'images';
+      const baseName = replaceFileExtension(firstItemName, 'pdf').replace(/\.pdf$/i, '');
+      const downloadName = validItems.length > 1 ? `${baseName}-combined.pdf` : `${baseName}.pdf`;
+
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to generate combined PDF document:', err);
+    } finally {
+      setIsGeneratingCombinedPdf(false);
+    }
+  }, [items, globalSettings]);
+
   /**
    * Triggers ZIP download for all completed files.
    */
@@ -375,6 +413,7 @@ export function useImageConverter() {
     isProcessingBatch,
     batchProgress,
     globalSettings,
+    isGeneratingCombinedPdf,
     fromFormat: fromParam,
     toFormat: targetParam,
     setGlobalSettings,
@@ -388,5 +427,6 @@ export function useImageConverter() {
     convertAllItems,
     downloadSingleItem,
     downloadAllZip,
+    downloadCombinedPdf,
   };
 }

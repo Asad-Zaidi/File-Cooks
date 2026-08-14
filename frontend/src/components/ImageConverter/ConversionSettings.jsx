@@ -12,8 +12,8 @@ import {
 } from 'react-icons/fa';
 
 export default function ConversionSettings({ settings, onSettingsChange, currentTargetFormat }) {
-  const isQualityApplicable = currentTargetFormat === 'jpg' || currentTargetFormat === 'webp';
-  const isBackgroundApplicable = currentTargetFormat === 'jpg' || currentTargetFormat === 'bmp';
+  const isQualityApplicable = currentTargetFormat === 'jpg' || currentTargetFormat === 'webp' || currentTargetFormat === 'pdf';
+  const isBackgroundApplicable = currentTargetFormat === 'jpg' || currentTargetFormat === 'bmp' || currentTargetFormat === 'pdf';
 
   // Smart presets handler
   const applyPreset = (presetType) => {

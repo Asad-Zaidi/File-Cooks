@@ -13,7 +13,7 @@ export const CONVERTER_CONFIG = {
 
   // Supported format definitions
   supportedInputFormats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'tiff'],
-  supportedOutputFormats: ['jpg', 'png', 'webp', 'bmp'],
+  supportedOutputFormats: ['jpg', 'png', 'webp', 'bmp', 'pdf'],
 
   // Default export settings
   defaults: {

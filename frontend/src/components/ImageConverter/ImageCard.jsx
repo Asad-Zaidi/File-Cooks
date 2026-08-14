@@ -16,6 +16,7 @@ import { CONVERTER_CONFIG } from '../../services/converterConfig';
 
 export default function ImageCard({
   item,
+  viewMode = 'grid',
   onTargetFormatChange,
   onConvertSingle,
   onDownloadSingle,
@@ -41,6 +42,124 @@ export default function ImageCard({
   } = item;
 
   const displayImage = status === 'completed' && resultBlobUrl ? resultBlobUrl : thumbnailUrl;
+
+  if (viewMode === 'grid') {
+    return (
+      <>
+        <div className="bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-2xs hover:shadow-lg transition-all duration-300 group flex flex-col justify-between animate-fade-in hover:-translate-y-0.5">
+          {/* Top Image Preview Box (Compact & Fitted) */}
+          <div
+            onClick={() => displayImage && setShowPreviewModal(true)}
+            className="relative w-full h-24 sm:h-28 bg-gray-50/80 border-b border-gray-100 overflow-hidden cursor-pointer group/thumb flex items-center justify-center p-1.5"
+          >
+            {displayImage ? (
+              <img
+                src={displayImage}
+                alt={name}
+                className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover/thumb:scale-105"
+                style={{ transform: `rotate(${rotation}deg)` }}
+              />
+            ) : (
+              <FaFileImage className="text-gray-300" size={24} />
+            )}
+
+            {/* Hover Zoom Overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-all duration-300 flex items-center justify-center text-white backdrop-blur-[1px]">
+              <FaEye size={18} className="transform scale-90 group-hover/thumb:scale-100 transition-transform" />
+            </div>
+
+            {/* Original Format Badge on Top Left */}
+            <div className="absolute top-2 left-2 flex items-center gap-1 pointer-events-none z-10">
+              <span className="uppercase font-black px-1.5 py-0.5 rounded bg-black/70 text-white text-[9px] tracking-wider backdrop-blur-md shadow-xs">
+                {originalFormat}
+              </span>
+            </div>
+
+            {/* Remove Button Top Right */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(id);
+              }}
+              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white/90 hover:bg-red-600 hover:text-white flex items-center justify-center transition-colors duration-200 shadow-md z-10"
+              title="Remove file"
+            >
+              <FaTimes size={10} />
+            </button>
+          </div>
+
+          {/* Card Body */}
+          <div className="p-2.5 flex-1 flex flex-col justify-between">
+            <div>
+              <h4
+                className="text-xs font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors"
+                title={name}
+              >
+                {name}
+              </h4>
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium mt-0.5">
+                <span>{formatBytes(originalSize)}</span>
+                <span>•</span>
+                <span>{originalDimensions ? `${originalDimensions.width}×${originalDimensions.height}px` : '--'}</span>
+              </div>
+
+              {/* Conversion Result Pill */}
+              {status === 'completed' && resultSize && (
+                <div className="mt-1.5 text-[10px] text-emerald-700 font-semibold bg-emerald-50/90 px-2 py-0.5 rounded-lg border border-emerald-200/80 flex items-center gap-1 animate-fade-in">
+                  <FaCheckCircle className="text-emerald-500 shrink-0" size={10} />
+                  <span className="truncate">Converted ({formatBytes(resultSize)})</span>
+                </div>
+              )}
+
+              {/* Error State */}
+              {status === 'error' && errorMessage && (
+                <div className="mt-1.5 text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-lg border border-red-200 flex items-center gap-1 animate-fade-in">
+                  <FaExclamationCircle className="text-red-500 shrink-0" size={10} />
+                  <span className="truncate">{errorMessage}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Preview Modal */}
+        {showPreviewModal && displayImage && (
+          <div
+            onClick={() => setShowPreviewModal(false)}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[90vh] bg-white rounded-3xl p-4 overflow-hidden shadow-2xl animate-slide-up"
+            >
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black transition-colors"
+              >
+                <FaTimes size={16} />
+              </button>
+
+              <div className="flex items-center justify-center p-4">
+                <img
+                  src={displayImage}
+                  alt={name}
+                  className="max-h-[75vh] w-auto max-w-full object-contain rounded-xl shadow-md transition-transform duration-300"
+                  style={{ transform: `rotate(${rotation}deg)` }}
+                />
+              </div>
+
+              <div className="text-center pt-3 text-xs text-gray-700 font-bold border-t border-gray-100 flex items-center justify-center gap-2">
+                <FaFileImage className="text-orange-500" />
+                <span>{name} ({originalDimensions?.width} × {originalDimensions?.height} px)</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <>
