@@ -1,0 +1,14 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+pymongo==4.17.0
+pydantic==2.13.4
+pydantic-settings==2.15.0
+python-multipart==0.0.32
+pydub==0.25.1
+audioop-lts==0.2.2  # restores the stdlib `audioop` module pydub needs (removed in Python 3.13+)
+av==18.1.0
+python-dotenv==1.2.3
+
+# Testing
+pytest==9.1.1
+httpx==0.28.1

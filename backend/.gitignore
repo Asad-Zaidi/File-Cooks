@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+
+
+# Environment secrets
+.env
+
+# Storage directories (contents are runtime data, not source)
+uploads/*
+converted/*
+temp/*
+!uploads/.gitkeep
+!converted/.gitkeep
+!temp/.gitkeep
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
