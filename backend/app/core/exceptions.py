@@ -74,3 +74,45 @@ class ResourceNotFoundError(AppError):
     code = "NOT_FOUND"
     status_code = status.HTTP_404_NOT_FOUND
     default_message = "The requested resource was not found."
+
+
+class MissingVideoStreamError(AppError):
+    code = "MISSING_VIDEO_STREAM"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The uploaded file does not contain a video stream."
+
+
+class MissingAudioStreamError(AppError):
+    code = "MISSING_AUDIO_STREAM"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The uploaded file does not contain an audio stream."
+
+
+class VideoTooLongError(AppError):
+    code = "VIDEO_TOO_LONG"
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, max_seconds: int | None = None):
+        message = (
+            f"Video duration exceeds the maximum allowed length of {max_seconds} seconds."
+            if max_seconds else "Video is too long."
+        )
+        super().__init__(message)
+
+
+class UnsupportedCodecError(AppError):
+    code = "UNSUPPORTED_CODEC"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The requested codec is not supported by the installed FFmpeg build."
+
+
+class JobCancelledError(AppError):
+    code = "JOB_CANCELLED"
+    status_code = status.HTTP_409_CONFLICT
+    default_message = "The job was cancelled."
+
+
+class JobNotCancellableError(AppError):
+    code = "JOB_NOT_CANCELLABLE"
+    status_code = status.HTTP_409_CONFLICT
+    default_message = "The job has already finished and cannot be cancelled."

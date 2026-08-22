@@ -28,9 +28,17 @@ class Settings(BaseSettings):
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DATABASE: str = "filecooks"
 
-    # --- Upload / conversion limits ---
+    # --- Upload / conversion limits (audio) ---
     MAX_UPLOAD_SIZE_MB: int = 200
     MAX_CONVERSION_TIME_SECONDS: int = 300
+
+    # --- Upload / conversion limits (video) ---
+    MAX_VIDEO_UPLOAD_SIZE_MB: int = 2048
+    MAX_VIDEO_DURATION_SECONDS: int = 7200
+    CONVERSION_TIMEOUT_SECONDS: int = 3600
+    MAX_CONCURRENT_CONVERSIONS: int = 2
+    FILE_RETENTION_MINUTES: float = 60.0
+    CLEANUP_INTERVAL_SECONDS: int = 600
 
     # --- Storage directories (relative to backend/ unless absolute) ---
     UPLOAD_DIRECTORY: str = "uploads"
@@ -63,6 +71,10 @@ class Settings(BaseSettings):
     @property
     def max_upload_size_bytes(self) -> int:
         return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+    @property
+    def max_video_upload_size_bytes(self) -> int:
+        return self.MAX_VIDEO_UPLOAD_SIZE_MB * 1024 * 1024
 
     @property
     def cors_origins_list(self) -> list[str]:

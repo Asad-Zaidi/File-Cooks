@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa6";
 
 import logo from "../assets/logo.png";
+import { popularVideoConversions, popularVideoToAudioConversions } from "../services/videoConversionsConfig";
 
 
 const imageConversions = [
@@ -28,19 +29,41 @@ const imageConversions = [
   { name: "All Image Tools", from: "", to: "", desc: "Open full image converter" },
 ];
 
+const audioConversions = [
+  { name: "WAV → MP3", from: "wav", to: "mp3", desc: "Shrink studio WAV to universal MP3" },
+  { name: "M4A → MP3", from: "m4a", to: "mp3", desc: "Convert Voice Memos & AAC to MP3" },
+  { name: "FLAC → MP3", from: "flac", to: "mp3", desc: "Convert lossless FLAC to portable MP3" },
+  { name: "MP3 → WAV", from: "mp3", to: "wav", desc: "Convert MP3 to uncompressed 16-bit WAV" },
+  { name: "FLAC → WAV", from: "flac", to: "wav", desc: "Lossless master studio audio conversion" },
+  { name: "OGG → MP3", from: "ogg", to: "mp3", desc: "Convert game & web audio to MP3" },
+  { name: "Opus → MP3", from: "opus", to: "mp3", desc: "Transcode modern voice & chat to MP3" },
+  { name: "MP3 → AAC", from: "mp3", to: "aac", desc: "Convert MP3 to high-efficiency AAC stream" },
+  { name: "WAV → FLAC", from: "wav", to: "flac", desc: "Compress WAV losslessly into FLAC" },
+  { name: "AIFF → MP3", from: "aiff", to: "mp3", desc: "Convert Apple AIFF to standard MP3" },
+  { name: "AMR → MP3", from: "amr", to: "mp3", desc: "Convert telephony voice audio to MP3" },
+  { name: "AC3 → MP3", from: "ac3", to: "mp3", desc: "Convert Dolby Digital audio to MP3" },
+  { name: "All Audio Tools", from: "", to: "", desc: "Open full audio converter" },
+];
+
 const navItems = [
   { name: "Home", path: "/", icon: null },
   { name: "Document", path: "/document", icon: FaFileLines },
   { name: "Image", path: "/image", icon: FaImage, hasDropdown: true },
-  { name: "Audio", path: "/audio", icon: FaHeadphones },
-  { name: "Video", path: "/video", icon: FaVideo },
+  { name: "Audio", path: "/audio", icon: FaHeadphones, hasDropdown: true },
+  { name: "Video", path: "/video", icon: FaVideo, hasDropdown: true },
 ];
 
 const NavBar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [imageDropdownOpen, setImageDropdownOpen] = useState(false);
   const [mobileImageOpen, setMobileImageOpen] = useState(false);
+  const [audioDropdownOpen, setAudioDropdownOpen] = useState(false);
+  const [mobileAudioOpen, setMobileAudioOpen] = useState(false);
+  const [videoDropdownOpen, setVideoDropdownOpen] = useState(false);
+  const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
   const dropdownTimeoutRef = useRef(null);
+  const audioDropdownTimeoutRef = useRef(null);
+  const videoDropdownTimeoutRef = useRef(null);
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
@@ -51,6 +74,10 @@ const NavBar = () => {
     setMenuOpen(false);
     setImageDropdownOpen(false);
     setMobileImageOpen(false);
+    setAudioDropdownOpen(false);
+    setMobileAudioOpen(false);
+    setVideoDropdownOpen(false);
+    setMobileVideoOpen(false);
   };
 
   const handleMouseEnter = () => {
@@ -61,6 +88,28 @@ const NavBar = () => {
   const handleMouseLeave = () => {
     dropdownTimeoutRef.current = setTimeout(() => {
       setImageDropdownOpen(false);
+    }, 200);
+  };
+
+  const handleAudioMouseEnter = () => {
+    if (audioDropdownTimeoutRef.current) clearTimeout(audioDropdownTimeoutRef.current);
+    setAudioDropdownOpen(true);
+  };
+
+  const handleAudioMouseLeave = () => {
+    audioDropdownTimeoutRef.current = setTimeout(() => {
+      setAudioDropdownOpen(false);
+    }, 200);
+  };
+
+  const handleVideoMouseEnter = () => {
+    if (videoDropdownTimeoutRef.current) clearTimeout(videoDropdownTimeoutRef.current);
+    setVideoDropdownOpen(true);
+  };
+
+  const handleVideoMouseLeave = () => {
+    videoDropdownTimeoutRef.current = setTimeout(() => {
+      setVideoDropdownOpen(false);
     }, 200);
   };
 
@@ -86,6 +135,8 @@ const NavBar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isImage = item.name === "Image";
+              const isAudio = item.name === "Audio";
+              const isVideo = item.name === "Video";
 
               if (isImage) {
                 return (
@@ -116,7 +167,7 @@ const NavBar = () => {
                     {/* ── Image Tools Dropdown Menu ── */}
                     {imageDropdownOpen && (
                       <div
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[22rem] sm:w-[28rem] rounded-3xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 z-50 animate-fade-in origin-top"
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[22rem] sm:w-[28rem] rounded-3xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 z-50 animate-fade-in origin-top before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2"
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                       >
@@ -217,6 +268,228 @@ const NavBar = () => {
                 );
               }
 
+              if (isAudio) {
+                return (
+                  <div
+                    key={item.name}
+                    className="relative flex items-center"
+                    onMouseEnter={handleAudioMouseEnter}
+                    onMouseLeave={handleAudioMouseLeave}
+                  >
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${isActive || location.pathname.includes('/audio')
+                          ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md"
+                          : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                        }`
+                      }
+                    >
+                      <Icon size={14} />
+                      <span>{item.name}</span>
+                      <HiChevronDown
+                        className={`transition-transform duration-200 ${audioDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        size={14}
+                      />
+                    </NavLink>
+
+                    {/* ── Audio Tools Dropdown Menu ── */}
+                    {audioDropdownOpen && (
+                      <div
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[22rem] sm:w-[28rem] rounded-3xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 z-50 animate-fade-in origin-top before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2"
+                        onMouseEnter={handleAudioMouseEnter}
+                        onMouseLeave={handleAudioMouseLeave}
+                      >
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3 px-1">
+                          <div className="flex items-center gap-2 text-xs font-extrabold text-gray-800">
+                            <FaExchangeAlt className="text-orange-500" />
+                            <span>Audio Converter</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                            100% Studio Fidelity
+                          </span>
+                        </div>
+
+                        {/* 2-Column Grid of Audio Conversion Shortcuts */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {audioConversions.map((conv) => {
+                            const path =
+                              conv.from && conv.to
+                                ? `/audio?from=${conv.from}&to=${conv.to}`
+                                : conv.to
+                                  ? `/audio?to=${conv.to}`
+                                  : "/audio";
+
+                            const isSelected =
+                              conv.from && conv.to
+                                ? currentFrom === conv.from && currentTo === conv.to
+                                : conv.to
+                                  ? currentTo === conv.to && (!currentFrom || currentFrom === conv.from)
+                                  : location.pathname === "/audio" && !currentFrom && !currentTo;
+
+                            return (
+                              <NavLink
+                                key={conv.name}
+                                to={path}
+                                onClick={closeAll}
+                                className={`group flex items-center justify-between p-2.5 rounded-2xl border transition-all duration-200 ${isSelected
+                                  ? "bg-orange-500 border-orange-500 text-white font-bold shadow-sm"
+                                  : "bg-gray-50/60 hover:bg-orange-500 hover:text-white border-gray-100 text-gray-700"
+                                  }`}
+                              >
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold leading-tight group-hover:text-white transition-colors">
+                                    {conv.name}
+                                  </div>
+                                  <div
+                                    className={`text-[10px] truncate transition-colors ${isSelected
+                                      ? "text-white/90 font-medium"
+                                      : "opacity-75 group-hover:text-white/90"
+                                      }`}
+                                  >
+                                    {conv.desc}
+                                  </div>
+                                </div>
+                                <FaArrowRight
+                                  size={10}
+                                  className={`transition-all shrink-0 ml-1 ${isSelected
+                                    ? "opacity-100 text-white"
+                                    : "opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5"
+                                    }`}
+                                />
+                              </NavLink>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (isVideo) {
+                return (
+                  <div
+                    key={item.name}
+                    className="relative flex items-center"
+                    onMouseEnter={handleVideoMouseEnter}
+                    onMouseLeave={handleVideoMouseLeave}
+                  >
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${isActive || location.pathname.includes('/video')
+                          ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md"
+                          : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                        }`
+                      }
+                    >
+                      <Icon size={14} />
+                      <span>{item.name}</span>
+                      <HiChevronDown
+                        className={`transition-transform duration-200 ${videoDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        size={14}
+                      />
+                    </NavLink>
+
+                    {/* ── Video Tools Mega Menu ── */}
+                    {videoDropdownOpen && (
+                      <div
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[22rem] sm:w-[28rem] rounded-3xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 z-50 animate-fade-in origin-top before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2"
+                        onMouseEnter={handleVideoMouseEnter}
+                        onMouseLeave={handleVideoMouseLeave}
+                      >
+                        <NavLink
+                          to="/video"
+                          onClick={closeAll}
+                          className="flex items-center justify-between p-3 mb-3 rounded-2xl border bg-gradient-to-r from-orange-50/80 to-amber-50/80 hover:from-orange-500 hover:to-amber-500 hover:text-white border-orange-200/80 text-gray-800 transition-all duration-200"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="p-2 rounded-xl bg-white/90 text-orange-600 shadow-2xs">
+                              <FaVideo size={16} />
+                            </span>
+                            <div>
+                              <div className="text-xs font-black leading-tight">Video Converter</div>
+                              <div className="text-[10px] opacity-85 font-medium mt-0.5">
+                                Real FFmpeg engine · Live progress · Cancel anytime
+                              </div>
+                            </div>
+                          </div>
+                          <FaArrowRight size={12} className="shrink-0 ml-2" />
+                        </NavLink>
+
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 px-1">
+                          <div className="flex items-center gap-2 text-xs font-extrabold text-gray-800">
+                            <FaExchangeAlt className="text-orange-500" />
+                            <span>Popular Video Conversions</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                          {popularVideoConversions.filter(Boolean).map((conv) => (
+                            <NavLink
+                              key={conv.slug}
+                              to={conv.path}
+                              onClick={closeAll}
+                              className={`group flex items-center justify-between p-2.5 rounded-2xl border transition-all duration-200 ${location.pathname === conv.path
+                                ? "bg-orange-500 border-orange-500 text-white font-bold shadow-sm"
+                                : "bg-gray-50/60 hover:bg-orange-500 hover:text-white border-gray-100 text-gray-700"
+                                }`}
+                            >
+                              <span className="text-xs font-bold leading-tight group-hover:text-white transition-colors">
+                                {conv.name}
+                              </span>
+                              <FaArrowRight
+                                size={10}
+                                className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-1"
+                              />
+                            </NavLink>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 px-1">
+                          <div className="flex items-center gap-2 text-xs font-extrabold text-gray-800">
+                            <FaHeadphones className="text-orange-500" />
+                            <span>Video to Audio</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                          {popularVideoToAudioConversions.filter(Boolean).map((conv) => (
+                            <NavLink
+                              key={conv.slug}
+                              to={conv.path}
+                              onClick={closeAll}
+                              className={`group flex items-center justify-between p-2.5 rounded-2xl border transition-all duration-200 ${location.pathname === conv.path
+                                ? "bg-orange-500 border-orange-500 text-white font-bold shadow-sm"
+                                : "bg-gray-50/60 hover:bg-orange-500 hover:text-white border-gray-100 text-gray-700"
+                                }`}
+                            >
+                              <span className="text-xs font-bold leading-tight group-hover:text-white transition-colors">
+                                {conv.name}
+                              </span>
+                              <FaArrowRight
+                                size={10}
+                                className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-1"
+                              />
+                            </NavLink>
+                          ))}
+                        </div>
+
+                        <NavLink
+                          to="/video"
+                          onClick={closeAll}
+                          className="flex items-center justify-center gap-1.5 p-2.5 rounded-2xl border border-gray-100 bg-gray-50/60 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-gray-700 text-xs font-bold transition-all duration-200"
+                        >
+                          <span>View All Video Converters</span>
+                          <FaArrowRight size={10} />
+                        </NavLink>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <NavLink
                   key={item.path}
@@ -268,6 +541,8 @@ const NavBar = () => {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isImage = item.name === "Image";
+            const isAudio = item.name === "Audio";
+            const isVideo = item.name === "Video";
 
             if (isImage) {
               return (
@@ -349,6 +624,164 @@ const NavBar = () => {
                           );
                         })}
                       </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (isAudio) {
+              return (
+                <div key={item.name} className="border-b border-gray-100">
+                  <div className="flex items-center">
+                    <NavLink
+                      to={item.path}
+                      onClick={closeAll}
+                      className={({ isActive }) =>
+                        `flex-1 flex items-center gap-3 px-6 py-4 text-base font-medium transition-colors ${isActive ? "text-orange-600 bg-orange-50/50" : "text-gray-700"
+                        }`
+                      }
+                    >
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 text-orange-500">
+                        <Icon size={14} />
+                      </span>
+                      <span>Audio Tools</span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => setMobileAudioOpen(!mobileAudioOpen)}
+                      className="px-6 py-4 text-gray-500 hover:text-orange-600"
+                      aria-label="Toggle Audio Tools"
+                    >
+                      <HiChevronDown
+                        size={18}
+                        className={`transition-transform duration-300 ${mobileAudioOpen ? "rotate-180" : ""
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Collapsible Sub-list for Mobile */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${mobileAudioOpen ? "max-h-96" : "max-h-0"
+                      }`}
+                  >
+                    <div className="bg-gray-50/90 py-3 px-4 space-y-2">
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        {audioConversions.map((conv) => {
+                          const path =
+                            conv.from && conv.to
+                              ? `/audio?from=${conv.from}&to=${conv.to}`
+                              : conv.to
+                                ? `/audio?to=${conv.to}`
+                                : "/audio";
+
+                          const isSelected =
+                            conv.from && conv.to
+                              ? currentFrom === conv.from && currentTo === conv.to
+                              : conv.to
+                                ? currentTo === conv.to && (!currentFrom || currentFrom === conv.from)
+                                : location.pathname === "/audio" && !currentFrom && !currentTo;
+
+                          return (
+                            <NavLink
+                              key={conv.name}
+                              to={path}
+                              onClick={closeAll}
+                              className={`p-2.5 rounded-xl border text-xs font-bold transition-colors block text-center shadow-2xs ${isSelected
+                                ? "bg-orange-500 border-orange-500 text-white"
+                                : "bg-white border-gray-200/80 text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                              {conv.name}
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (isVideo) {
+              return (
+                <div key={item.name} className="border-b border-gray-100">
+                  <div className="flex items-center">
+                    <NavLink
+                      to={item.path}
+                      onClick={closeAll}
+                      className={({ isActive }) =>
+                        `flex-1 flex items-center gap-3 px-6 py-4 text-base font-medium transition-colors ${isActive ? "text-orange-600 bg-orange-50/50" : "text-gray-700"
+                        }`
+                      }
+                    >
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 text-orange-500">
+                        <Icon size={14} />
+                      </span>
+                      <span>Video Tools</span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => setMobileVideoOpen(!mobileVideoOpen)}
+                      className="px-6 py-4 text-gray-500 hover:text-orange-600"
+                      aria-label="Toggle Video Tools"
+                    >
+                      <HiChevronDown
+                        size={18}
+                        className={`transition-transform duration-300 ${mobileVideoOpen ? "rotate-180" : ""
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Collapsible Sub-list for Mobile */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${mobileVideoOpen ? "max-h-[36rem]" : "max-h-0"
+                      }`}
+                  >
+                    <div className="bg-gray-50/90 py-3 px-4 space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-400 px-1">Popular Video Conversions</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {popularVideoConversions.filter(Boolean).map((conv) => (
+                          <NavLink
+                            key={conv.slug}
+                            to={conv.path}
+                            onClick={closeAll}
+                            className={`p-2.5 rounded-xl border text-xs font-bold transition-colors block text-center shadow-2xs ${location.pathname === conv.path
+                              ? "bg-orange-500 border-orange-500 text-white"
+                              : "bg-white border-gray-200/80 text-gray-800 hover:bg-orange-500 hover:text-white"
+                              }`}
+                          >
+                            {conv.name}
+                          </NavLink>
+                        ))}
+                      </div>
+
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-400 px-1 pt-1">Video to Audio</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {popularVideoToAudioConversions.filter(Boolean).map((conv) => (
+                          <NavLink
+                            key={conv.slug}
+                            to={conv.path}
+                            onClick={closeAll}
+                            className={`p-2.5 rounded-xl border text-xs font-bold transition-colors block text-center shadow-2xs ${location.pathname === conv.path
+                              ? "bg-orange-500 border-orange-500 text-white"
+                              : "bg-white border-gray-200/80 text-gray-800 hover:bg-orange-500 hover:text-white"
+                              }`}
+                          >
+                            {conv.name}
+                          </NavLink>
+                        ))}
+                      </div>
+
+                      <NavLink
+                        to="/video"
+                        onClick={closeAll}
+                        className="mt-1 p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-xs"
+                      >
+                        View All Video Converters
+                      </NavLink>
                     </div>
                   </div>
                 </div>

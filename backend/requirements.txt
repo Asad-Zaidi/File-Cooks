@@ -8,6 +8,7 @@ pydub==0.25.1
 audioop-lts==0.2.2  # restores the stdlib `audioop` module pydub needs (removed in Python 3.13+)
 av==18.1.0
 python-dotenv==1.2.3
+static-ffmpeg==3.0
 
 # Testing
 pytest==9.1.1

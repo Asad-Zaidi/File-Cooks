@@ -16,6 +16,13 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+# Auto-enable static FFmpeg/FFprobe binaries if available in environment
+try:
+    import static_ffmpeg
+    static_ffmpeg.add_paths()
+except Exception:
+    pass
+
 from app.core.config import settings
 
 
@@ -58,6 +65,16 @@ def _probe_version(executable_path: str) -> str | None:
     first_line = output.splitlines()[0]
     match = re.search(r"version\s+(\S+)", first_line)
     return match.group(1) if match else first_line
+
+
+def get_ffmpeg_path() -> str | None:
+    """Resolved path to the configured FFmpeg executable, or None if missing."""
+    return _resolve_executable(settings.FFMPEG_PATH)
+
+
+def get_ffprobe_path() -> str | None:
+    """Resolved path to the configured FFprobe executable, or None if missing."""
+    return _resolve_executable(settings.FFPROBE_PATH)
 
 
 def check_ffmpeg() -> ToolStatus:

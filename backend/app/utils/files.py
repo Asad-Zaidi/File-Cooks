@@ -53,13 +53,16 @@ def safe_path(base_dir: Path, filename: str) -> Path:
     return candidate
 
 
-async def save_upload_file(upload_file: UploadFile, destination_dir: Path, extension: str) -> tuple[Path, int]:
-    """Stream an UploadFile to disk under a fresh UUID name, enforcing the
-    configured max upload size. Returns (path, size_in_bytes)."""
+async def save_upload_file(
+    upload_file: UploadFile, destination_dir: Path, extension: str, max_bytes: int | None = None,
+) -> tuple[Path, int]:
+    """Stream an UploadFile to disk under a fresh UUID name, enforcing a max
+    upload size (defaults to the audio limit; callers with a different limit,
+    e.g. video, pass `max_bytes` explicitly). Returns (path, size_in_bytes)."""
     destination_dir.mkdir(parents=True, exist_ok=True)
     destination_path = safe_path(destination_dir, generate_internal_filename(extension))
 
-    max_bytes = settings.max_upload_size_bytes
+    limit = max_bytes if max_bytes is not None else settings.max_upload_size_bytes
     chunk_size = 1024 * 1024
     size = 0
 
@@ -67,8 +70,8 @@ async def save_upload_file(upload_file: UploadFile, destination_dir: Path, exten
         with open(destination_path, "wb") as out_file:
             while chunk := await upload_file.read(chunk_size):
                 size += len(chunk)
-                if size > max_bytes:
-                    raise FileTooLargeError(settings.MAX_UPLOAD_SIZE_MB)
+                if size > limit:
+                    raise FileTooLargeError(limit // (1024 * 1024))
                 out_file.write(chunk)
     except FileTooLargeError:
         delete_file(destination_path)

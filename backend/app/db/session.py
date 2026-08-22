@@ -11,11 +11,12 @@ from pymongo.errors import PyMongoError
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.db.models import ConversionRecord
+from app.db.models import ConversionRecord, VideoJob
 
 logger = get_logger("db")
 
 CONVERSIONS_COLLECTION = "conversions"
+VIDEO_JOBS_COLLECTION = "video_jobs"
 
 client: AsyncMongoClient = AsyncMongoClient(
     settings.MONGODB_URL,
@@ -28,11 +29,18 @@ def get_conversions_collection():
     return database[CONVERSIONS_COLLECTION]
 
 
+def get_video_jobs_collection():
+    return database[VIDEO_JOBS_COLLECTION]
+
+
 async def connect_to_mongodb() -> None:
     try:
         await client.admin.command("ping")
         await get_conversions_collection().create_index("conversion_id", unique=True)
         await get_conversions_collection().create_index("created_at")
+        await get_video_jobs_collection().create_index("job_id", unique=True)
+        await get_video_jobs_collection().create_index("created_at")
+        await get_video_jobs_collection().create_index("batch_id")
         logger.info("MongoDB connected | database=%s", settings.MONGODB_DATABASE)
     except PyMongoError as exc:
         logger.error("MongoDB connection failed: %s", exc)
@@ -71,3 +79,48 @@ async def get_conversion_record(conversion_id: str) -> dict | None:
     except PyMongoError as exc:
         logger.error("Failed to fetch conversion record %s: %s", conversion_id, exc)
         return None
+
+
+# --- Video jobs --------------------------------------------------------------
+
+async def save_video_job(job: VideoJob) -> None:
+    try:
+        await get_video_jobs_collection().insert_one(job.to_mongo())
+    except PyMongoError as exc:
+        logger.error("Failed to persist video job %s: %s", job.job_id, exc)
+
+
+async def update_video_job(job_id: str, updates: dict) -> None:
+    try:
+        await get_video_jobs_collection().update_one({"job_id": job_id}, {"$set": updates})
+    except PyMongoError as exc:
+        logger.error("Failed to update video job %s: %s", job_id, exc)
+
+
+async def get_video_job(job_id: str) -> dict | None:
+    try:
+        return await get_video_jobs_collection().find_one({"job_id": job_id}, {"_id": False})
+    except PyMongoError as exc:
+        logger.error("Failed to fetch video job %s: %s", job_id, exc)
+        return None
+
+
+async def delete_video_job(job_id: str) -> None:
+    try:
+        await get_video_jobs_collection().delete_one({"job_id": job_id})
+    except PyMongoError as exc:
+        logger.error("Failed to delete video job %s: %s", job_id, exc)
+
+
+async def find_stale_video_jobs(cutoff_iso: str) -> list[dict]:
+    """Terminal (completed/failed/cancelled) jobs created before `cutoff_iso`
+    (an ISO-8601 timestamp string), used by the periodic cleanup loop."""
+    try:
+        cursor = get_video_jobs_collection().find(
+            {"status": {"$in": ["completed", "failed", "cancelled"]}, "created_at": {"$lt": cutoff_iso}},
+            {"_id": False, "job_id": True, "output_filename": True},
+        )
+        return await cursor.to_list(length=None)
+    except PyMongoError as exc:
+        logger.error("Failed to query stale video jobs: %s", exc)
+        return []
