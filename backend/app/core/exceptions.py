@@ -116,3 +116,70 @@ class JobNotCancellableError(AppError):
     code = "JOB_NOT_CANCELLABLE"
     status_code = status.HTTP_409_CONFLICT
     default_message = "The job has already finished and cannot be cancelled."
+
+
+# --- PDF ---------------------------------------------------------------------
+
+class PDFInvalidError(AppError):
+    code = "PDF_INVALID"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The uploaded file is not a valid PDF."
+
+
+class PDFEncryptedError(AppError):
+    code = "PDF_ENCRYPTED"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The PDF is encrypted. Supply a password to access its contents."
+
+
+class PDFPasswordError(AppError):
+    code = "PDF_PASSWORD_ERROR"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The supplied password is missing or incorrect."
+
+
+class PDFPageNotFoundError(AppError):
+    code = "PDF_PAGE_NOT_FOUND"
+    status_code = status.HTTP_404_NOT_FOUND
+    default_message = "Requested page does not exist."
+
+
+class PDFProcessingError(AppError):
+    code = "PDF_PROCESSING_FAILED"
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_message = "PDF processing failed."
+
+
+class PDFSignatureError(AppError):
+    code = "PDF_SIGNATURE_ERROR"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The PDF signature operation failed."
+
+
+class PDFFormError(AppError):
+    code = "PDF_FORM_ERROR"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "The PDF form operation failed."
+
+
+class PDFUnsupportedFeatureError(AppError):
+    code = "PDF_UNSUPPORTED_FEATURE"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "This PDF uses a feature that isn't supported."
+
+
+class PDFValidationError(AppError):
+    code = "PDF_VALIDATION_ERROR"
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_message = "One or more PDF request parameters are invalid."
+
+
+class PDFTooManyPagesError(AppError):
+    code = "PDF_TOO_MANY_PAGES"
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, max_pages: int | None = None):
+        message = (
+            f"PDF exceeds the maximum allowed page count of {max_pages}." if max_pages else "PDF has too many pages."
+        )
+        super().__init__(message)

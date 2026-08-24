@@ -10,6 +10,25 @@ av==18.1.0
 python-dotenv==1.2.3
 static-ffmpeg==3.0
 
+# --- PDF processing ---
+# pikepdf (LGPL-2.1+/MPL-2.0): structural PDF work -- info/metadata, page
+# reorder/delete/rotate/crop, merge/split, encryption, compression. Preferred
+# over PyMuPDF wherever it can do the job (see app/services/pdf/__init__.py).
+pikepdf==10.12.0
+# PyMuPDF (AGPL-3.0 -- commercial license available from Artifex for
+# closed-source distribution): rendering/thumbnails, annotations/redaction,
+# text extraction+search-with-coordinates, embedded image ops, form widgets,
+# handwritten-signature-image stamping. Usage is confined to specific
+# service modules that document the need for it; see the licensing note in
+# app/services/pdf/__init__.py before distributing this backend closed-source.
+PyMuPDF==1.28.2
+# pyHanko (MIT): cryptographic PDF digital signatures/validation only --
+# never used for general PDF editing.
+pyHanko==0.36.2
+# Pillow: image processing support for PDF image extraction/insertion and
+# compression's image downsampling.
+Pillow==12.3.0
+
 # Testing
 pytest==9.1.1
 httpx==0.28.1

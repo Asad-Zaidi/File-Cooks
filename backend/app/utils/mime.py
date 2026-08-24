@@ -1,11 +1,13 @@
-"""Lightweight file-signature ("magic bytes") sniffing for video containers.
+"""Lightweight file-signature ("magic bytes") sniffing for video containers
+and PDF files.
 
 This is a fast pre-check only -- it never trusts the filename extension, but
-it also isn't the authoritative validator: FFprobe (see
-app/services/video_metadata.py) is what actually decides whether a file
-contains usable media streams. This module exists to (a) reject obviously
-wrong uploads before spending a subprocess call on them, and (b) pick a
-correct Content-Type for downloads.
+it also isn't the authoritative validator: for video, FFprobe (see
+app/services/video_metadata.py) decides whether a file contains usable media
+streams; for PDF, app/services/pdf/document.py actually opens the file with
+pikepdf. This module exists to (a) reject obviously wrong uploads before
+spending real processing on them, and (b) pick a correct Content-Type for
+downloads.
 """
 
 from pathlib import Path
@@ -20,6 +22,10 @@ _SIGNATURES: tuple[tuple[str, int, bytes], ...] = (
     ("flv", 0, b"FLV"),
     ("mpegts", 0, b"\x47"),
 )
+
+# PDF files start with "%PDF-" (optionally preceded by a few bytes of junk some
+# generators prepend, but we only accept the strict/common case here).
+PDF_SIGNATURE = b"%PDF-"
 
 
 def sniff_container(head: bytes) -> str | None:
@@ -37,6 +43,18 @@ def sniff_container(head: bytes) -> str | None:
             return key
 
     return None
+
+
+def sniff_pdf(head: bytes) -> bool:
+    """True if `head` starts with the PDF file signature ("%PDF-").
+
+    Like `sniff_container`, this is a fast pre-check only -- it never trusts
+    the filename extension, but it isn't the authoritative validator either:
+    a file can start with "%PDF-" and still be structurally malformed. See
+    app/services/pdf/document.py, which actually opens the file to confirm it
+    parses.
+    """
+    return head.startswith(PDF_SIGNATURE)
 
 
 def read_file_head(path: Path, n: int = 32) -> bytes:

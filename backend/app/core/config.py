@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     # routine is allowed to remove it.
     FILE_RETENTION_HOURS: float = 24.0
 
+    # --- Upload / processing limits (PDF) ---
+    MAX_PDF_SIZE_MB: int = 200
+    MAX_PDF_PAGES: int = 2000
+    MAX_RENDER_DPI: int = 600
+    MAX_IMAGE_PIXELS: int = 40_000_000
+    MAX_PDF_PROCESSING_TIME_SECONDS: int = 120
+
     # --- FFmpeg ---
     # Left as bare executable names by default so they resolve via PATH.
     # Override in .env with an absolute path if FFmpeg isn't on PATH.
@@ -75,6 +82,10 @@ class Settings(BaseSettings):
     @property
     def max_video_upload_size_bytes(self) -> int:
         return self.MAX_VIDEO_UPLOAD_SIZE_MB * 1024 * 1024
+
+    @property
+    def max_pdf_size_bytes(self) -> int:
+        return self.MAX_PDF_SIZE_MB * 1024 * 1024
 
     @property
     def cors_origins_list(self) -> list[str]:

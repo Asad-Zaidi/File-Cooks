@@ -3,6 +3,9 @@ import Home from '../pages/Home'
 import NavBar from '../components/NavBar'
 import FromImage from '../pages/FromImage'
 import FromDocument from '../pages/FromDocument'
+import DocumentMergeSplit from '../pages/DocumentMergeSplit'
+import DocumentCompress from '../pages/DocumentCompress'
+import DocumentEditForms from '../pages/DocumentEditForms'
 import FromAudio from '../pages/FromAudio'
 import FromVideo from '../pages/FromVideo'
 import FromVideoToAudio from '../pages/FromVideoToAudio'
@@ -38,6 +41,9 @@ const AppRouter = () => {
                 <Route path='/image/icon-generator' element={<IconGenerator />} />
                 <Route path='/image-converter/icon-generator' element={<IconGenerator />} />
                 <Route path='/document' element={<FromDocument />} />
+                <Route path='/document/merge-split' element={<DocumentMergeSplit />} />
+                <Route path='/document/compress' element={<DocumentCompress />} />
+                <Route path='/document/edit' element={<DocumentEditForms />} />
                 <Route path='/audio' element={<FromAudio />} />
                 <Route path='/video' element={<FromVideo />} />
                 <Route path='/video/converter' element={<FromVideo />} />

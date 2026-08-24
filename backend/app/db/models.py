@@ -139,3 +139,69 @@ class VideoJob(BaseModel):
 
     def to_mongo(self) -> dict:
         return self.model_dump(mode="json")
+
+
+class PDFOperationStatus(str, Enum):
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class PDFOperation(str, Enum):
+    MERGE = "merge"
+    ASSEMBLE = "assemble"
+    SPLIT = "split"
+    EXTRACT_PAGES = "extract_pages"
+    REORDER_PAGES = "reorder_pages"
+    DELETE_PAGES = "delete_pages"
+    ROTATE_PAGES = "rotate_pages"
+    COMPRESS = "compress"
+    ANNOTATE = "annotate"
+    REMOVE_ANNOTATIONS = "remove_annotations"
+    FORM_FILL = "form_fill"
+
+
+class PDFOperationRecord(BaseModel):
+    """One row per PDF operation that produces a downloadable output file
+    (merge/split/compress/annotate/form-fill/...). Read-only inspections
+    (/pdf/info, /validate, /metadata) don't get a record -- there's nothing
+    to download, so nothing to track here."""
+
+    operation_id: str
+    operation: PDFOperation
+
+    original_filename: str
+    output_filename: str | None = None
+    output_format: str = "pdf"
+
+    input_size: int
+    output_size: int | None = None
+
+    status: PDFOperationStatus = PDFOperationStatus.PROCESSING
+    created_at: datetime = Field(default_factory=_utcnow)
+    completed_at: datetime | None = None
+    processing_time: float | None = None
+
+    # Operation-specific summary, e.g. {"page_count": 3} or
+    # {"compression_ratio": 0.42, "bytes_saved": 12345}.
+    details: dict = Field(default_factory=dict)
+
+    error: str | None = None
+
+    def mark_completed(self, output_filename: str, output_size: int, processing_time: float, details: dict | None = None) -> None:
+        self.status = PDFOperationStatus.COMPLETED
+        self.output_filename = output_filename
+        self.output_size = output_size
+        self.processing_time = processing_time
+        if details:
+            self.details.update(details)
+        self.completed_at = _utcnow()
+
+    def mark_failed(self, error: str, processing_time: float | None = None) -> None:
+        self.status = PDFOperationStatus.FAILED
+        self.error = error
+        self.processing_time = processing_time
+        self.completed_at = _utcnow()
+
+    def to_mongo(self) -> dict:
+        return self.model_dump(mode="json")

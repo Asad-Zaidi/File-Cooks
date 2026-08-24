@@ -11,12 +11,13 @@ from pymongo.errors import PyMongoError
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.db.models import ConversionRecord, VideoJob
+from app.db.models import ConversionRecord, PDFOperationRecord, VideoJob
 
 logger = get_logger("db")
 
 CONVERSIONS_COLLECTION = "conversions"
 VIDEO_JOBS_COLLECTION = "video_jobs"
+PDF_OPERATIONS_COLLECTION = "pdf_operations"
 
 client: AsyncMongoClient = AsyncMongoClient(
     settings.MONGODB_URL,
@@ -33,6 +34,10 @@ def get_video_jobs_collection():
     return database[VIDEO_JOBS_COLLECTION]
 
 
+def get_pdf_operations_collection():
+    return database[PDF_OPERATIONS_COLLECTION]
+
+
 async def connect_to_mongodb() -> None:
     try:
         await client.admin.command("ping")
@@ -41,6 +46,8 @@ async def connect_to_mongodb() -> None:
         await get_video_jobs_collection().create_index("job_id", unique=True)
         await get_video_jobs_collection().create_index("created_at")
         await get_video_jobs_collection().create_index("batch_id")
+        await get_pdf_operations_collection().create_index("operation_id", unique=True)
+        await get_pdf_operations_collection().create_index("created_at")
         logger.info("MongoDB connected | database=%s", settings.MONGODB_DATABASE)
     except PyMongoError as exc:
         logger.error("MongoDB connection failed: %s", exc)
@@ -110,6 +117,28 @@ async def delete_video_job(job_id: str) -> None:
         await get_video_jobs_collection().delete_one({"job_id": job_id})
     except PyMongoError as exc:
         logger.error("Failed to delete video job %s: %s", job_id, exc)
+
+
+async def save_pdf_operation(record: PDFOperationRecord) -> None:
+    try:
+        await get_pdf_operations_collection().insert_one(record.to_mongo())
+    except PyMongoError as exc:
+        logger.error("Failed to persist PDF operation record %s: %s", record.operation_id, exc)
+
+
+async def update_pdf_operation(operation_id: str, updates: dict) -> None:
+    try:
+        await get_pdf_operations_collection().update_one({"operation_id": operation_id}, {"$set": updates})
+    except PyMongoError as exc:
+        logger.error("Failed to update PDF operation record %s: %s", operation_id, exc)
+
+
+async def get_pdf_operation(operation_id: str) -> dict | None:
+    try:
+        return await get_pdf_operations_collection().find_one({"operation_id": operation_id}, {"_id": False})
+    except PyMongoError as exc:
+        logger.error("Failed to fetch PDF operation record %s: %s", operation_id, exc)
+        return None
 
 
 async def find_stale_video_jobs(cutoff_iso: str) -> list[dict]:

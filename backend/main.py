@@ -28,6 +28,7 @@ from app.core.logging import configure_logging, get_logger
 from app.core.video_formats import list_available_containers, list_available_extraction_audio_formats
 from app.db.session import check_mongodb_status, close_mongodb_connection, connect_to_mongodb
 from app.routers import audio, jobs, video
+from app.routers import pdf as pdf_routes
 from app.services.job_manager import cleanup_expired_jobs
 from app.utils.ffmpeg import check_ffmpeg, check_ffprobe
 from app.utils.files import cleanup_all_expired
@@ -120,6 +121,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 app.include_router(audio.router)
 app.include_router(video.router)
 app.include_router(jobs.router)
+app.include_router(pdf_routes.router)
 
 
 @app.get("/", tags=["System"], summary="API info")
@@ -145,7 +147,21 @@ async def health():
     except ImportError:
         pyav_available = False
 
-    if not pyav_available or not mongo_status["available"]:
+    try:
+        import pikepdf  # noqa: F401
+
+        pikepdf_available = True
+    except ImportError:
+        pikepdf_available = False
+
+    try:
+        import pymupdf  # noqa: F401
+
+        pymupdf_available = True
+    except ImportError:
+        pymupdf_available = False
+
+    if not pyav_available or not pikepdf_available or not pymupdf_available or not mongo_status["available"]:
         overall = "unhealthy"
     elif not ffmpeg_status.available:
         overall = "degraded"  # convert/metadata (PyAV) still work; trim/merge/volume (PyDub) don't
@@ -159,6 +175,7 @@ async def health():
         "ffmpeg": ffmpeg_status.as_dict(),
         "ffprobe": ffprobe_status.as_dict(),
         "pyav": {"available": pyav_available},
+        "pdf": {"pikepdf_available": pikepdf_available, "pymupdf_available": pymupdf_available},
         "formats": {
             "input": list_input_formats(),
             "output": list_output_formats(),

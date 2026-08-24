@@ -5,6 +5,7 @@ import { FaBars, FaExchangeAlt, FaArrowRight, FaMagic } from "react-icons/fa";
 import {
   FaImage,
   FaFileLines,
+  FaFilePdf,
   FaHeadphones,
   FaVideo,
 } from "react-icons/fa6";
@@ -45,9 +46,31 @@ const audioConversions = [
   { name: "All Audio Tools", from: "", to: "", desc: "Open full audio converter" },
 ];
 
+const documentTools = [
+  { name: "Document Info", path: "/document?tool=info", desc: "Full page count, dimensions & PDF version" },
+  { name: "Metadata Viewer", path: "/document?tool=metadata", desc: "Title, author, subject, dates & more" },
+  { name: "Validate PDF", path: "/document?tool=validate", desc: "Check for corruption or malformed structure" },
+  { name: "Merge & Split", path: "/document/merge-split", desc: "Combine PDFs, split, reorder & rotate pages" },
+  { name: "Compress PDF", path: "/document/compress", desc: "Shrink file size, tunable quality" },
+  { name: "Edit & Forms", path: "/document/edit", desc: "Annotate, redact, fill & flatten forms" },
+];
+
+const documentComingSoon = [
+  { name: "Digital Signatures", desc: "Cryptographic signing & signature validation" },
+];
+
+// A document tool's path may carry a `?tool=` query (the single-page
+// Inspector) or point at its own dedicated route (Merge & Split, Compress,
+// Edit & Forms) -- this matches either shape against the current location.
+const isDocumentToolSelected = (tool, location) => {
+  const [pathPart, queryPart] = tool.path.split("?");
+  if (location.pathname !== pathPart) return false;
+  return queryPart ? location.search === `?${queryPart}` : true;
+};
+
 const navItems = [
   { name: "Home", path: "/", icon: null },
-  { name: "Document", path: "/document", icon: FaFileLines },
+  { name: "Document", path: "/document", icon: FaFileLines, hasDropdown: true },
   { name: "Image", path: "/image", icon: FaImage, hasDropdown: true },
   { name: "Audio", path: "/audio", icon: FaHeadphones, hasDropdown: true },
   { name: "Video", path: "/video", icon: FaVideo, hasDropdown: true },
@@ -55,12 +78,15 @@ const navItems = [
 
 const NavBar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [documentDropdownOpen, setDocumentDropdownOpen] = useState(false);
+  const [mobileDocumentOpen, setMobileDocumentOpen] = useState(false);
   const [imageDropdownOpen, setImageDropdownOpen] = useState(false);
   const [mobileImageOpen, setMobileImageOpen] = useState(false);
   const [audioDropdownOpen, setAudioDropdownOpen] = useState(false);
   const [mobileAudioOpen, setMobileAudioOpen] = useState(false);
   const [videoDropdownOpen, setVideoDropdownOpen] = useState(false);
   const [mobileVideoOpen, setMobileVideoOpen] = useState(false);
+  const documentDropdownTimeoutRef = useRef(null);
   const dropdownTimeoutRef = useRef(null);
   const audioDropdownTimeoutRef = useRef(null);
   const videoDropdownTimeoutRef = useRef(null);
@@ -72,12 +98,25 @@ const NavBar = () => {
 
   const closeAll = () => {
     setMenuOpen(false);
+    setDocumentDropdownOpen(false);
+    setMobileDocumentOpen(false);
     setImageDropdownOpen(false);
     setMobileImageOpen(false);
     setAudioDropdownOpen(false);
     setMobileAudioOpen(false);
     setVideoDropdownOpen(false);
     setMobileVideoOpen(false);
+  };
+
+  const handleDocumentMouseEnter = () => {
+    if (documentDropdownTimeoutRef.current) clearTimeout(documentDropdownTimeoutRef.current);
+    setDocumentDropdownOpen(true);
+  };
+
+  const handleDocumentMouseLeave = () => {
+    documentDropdownTimeoutRef.current = setTimeout(() => {
+      setDocumentDropdownOpen(false);
+    }, 200);
   };
 
   const handleMouseEnter = () => {
@@ -134,9 +173,135 @@ const NavBar = () => {
           <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full border border-gray-200 shadow-xs bg-white/60 backdrop-blur-sm absolute left-1/2 -translate-x-1/2">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isDocument = item.name === "Document";
               const isImage = item.name === "Image";
               const isAudio = item.name === "Audio";
               const isVideo = item.name === "Video";
+
+              if (isDocument) {
+                return (
+                  <div
+                    key={item.name}
+                    className="relative flex items-center"
+                    onMouseEnter={handleDocumentMouseEnter}
+                    onMouseLeave={handleDocumentMouseLeave}
+                  >
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${isActive || location.pathname.includes('/document')
+                          ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-md"
+                          : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                        }`
+                      }
+                    >
+                      <Icon size={14} />
+                      <span>{item.name}</span>
+                      <HiChevronDown
+                        className={`transition-transform duration-200 ${documentDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        size={14}
+                      />
+                    </NavLink>
+
+                    {/* ── Document Tools Dropdown Menu ── */}
+                    {documentDropdownOpen && (
+                      <div
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[22rem] sm:w-[28rem] rounded-3xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 z-50 animate-fade-in origin-top before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2"
+                        onMouseEnter={handleDocumentMouseEnter}
+                        onMouseLeave={handleDocumentMouseLeave}
+                      >
+                        <NavLink
+                          to="/document"
+                          onClick={closeAll}
+                          className="flex items-center justify-between p-3 mb-3 rounded-2xl border bg-gradient-to-r from-orange-50/80 to-amber-50/80 hover:from-orange-500 hover:to-amber-500 hover:text-white border-orange-200/80 text-gray-800 transition-all duration-200"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="p-2 rounded-xl bg-white/90 text-orange-600 shadow-2xs">
+                              <FaFilePdf size={16} />
+                            </span>
+                            <div>
+                              <div className="text-xs font-black leading-tight">PDF Info & Inspector</div>
+                              <div className="text-[10px] opacity-85 font-medium mt-0.5">
+                                Metadata, page details & encryption checks
+                              </div>
+                            </div>
+                          </div>
+                          <FaArrowRight size={12} className="shrink-0 ml-2" />
+                        </NavLink>
+
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 px-1">
+                          <div className="flex items-center gap-2 text-xs font-extrabold text-gray-800">
+                            <FaFileLines className="text-orange-500" />
+                            <span>Available Now</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                            100% Free & Local
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                          {documentTools.map((tool) => {
+                            const isSelected = isDocumentToolSelected(tool, location);
+                            return (
+                              <NavLink
+                                key={tool.name}
+                                to={tool.path}
+                                onClick={closeAll}
+                                className={`group flex items-center justify-between p-2.5 rounded-2xl border transition-all duration-200 ${isSelected
+                                  ? "bg-orange-500 border-orange-500 text-white font-bold shadow-sm"
+                                  : "bg-gray-50/60 hover:bg-orange-500 hover:text-white border-gray-100 text-gray-700"
+                                  }`}
+                              >
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold leading-tight group-hover:text-white transition-colors">
+                                    {tool.name}
+                                  </div>
+                                  <div
+                                    className={`text-[10px] truncate transition-colors ${isSelected
+                                      ? "text-white/90 font-medium"
+                                      : "opacity-75 group-hover:text-white/90"
+                                      }`}
+                                  >
+                                    {tool.desc}
+                                  </div>
+                                </div>
+                                <FaArrowRight
+                                  size={10}
+                                  className={`transition-all shrink-0 ml-1 ${isSelected
+                                    ? "opacity-100 text-white"
+                                    : "opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5"
+                                    }`}
+                                />
+                              </NavLink>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 px-1">
+                          <span className="text-xs font-extrabold text-gray-400">Coming Soon</span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {documentComingSoon.map((tool) => (
+                            <div
+                              key={tool.name}
+                              className="flex items-center justify-between p-2.5 rounded-2xl border border-gray-100 bg-gray-50/60 text-gray-400 cursor-not-allowed"
+                              title="Coming soon"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold leading-tight">{tool.name}</div>
+                                <div className="text-[10px] truncate opacity-75">{tool.desc}</div>
+                              </div>
+                              <span className="text-[8px] font-black uppercase bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                                Soon
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
               if (isImage) {
                 return (
@@ -540,9 +705,96 @@ const NavBar = () => {
         <nav className="overflow-y-auto max-h-[38rem]">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isDocument = item.name === "Document";
             const isImage = item.name === "Image";
             const isAudio = item.name === "Audio";
             const isVideo = item.name === "Video";
+
+            if (isDocument) {
+              return (
+                <div key={item.name} className="border-b border-gray-100">
+                  <div className="flex items-center">
+                    <NavLink
+                      to={item.path}
+                      onClick={closeAll}
+                      className={({ isActive }) =>
+                        `flex-1 flex items-center gap-3 px-6 py-4 text-base font-medium transition-colors ${isActive ? "text-orange-600 bg-orange-50/50" : "text-gray-700"
+                        }`
+                      }
+                    >
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-orange-100 text-orange-500">
+                        <Icon size={14} />
+                      </span>
+                      <span>Document Tools</span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => setMobileDocumentOpen(!mobileDocumentOpen)}
+                      className="px-6 py-4 text-gray-500 hover:text-orange-600"
+                      aria-label="Toggle Document Tools"
+                    >
+                      <HiChevronDown
+                        size={18}
+                        className={`transition-transform duration-300 ${mobileDocumentOpen ? "rotate-180" : ""
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Collapsible Sub-list for Mobile */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${mobileDocumentOpen ? "max-h-[32rem]" : "max-h-0"
+                      }`}
+                  >
+                    <div className="bg-gray-50/90 py-3 px-4 space-y-3">
+                      <NavLink
+                        to="/document"
+                        onClick={closeAll}
+                        className="p-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs flex items-center justify-between shadow-xs"
+                      >
+                        <span className="flex items-center gap-2">
+                          <FaFilePdf size={14} />
+                          <span>PDF Info & Inspector</span>
+                        </span>
+                        <FaArrowRight size={10} />
+                      </NavLink>
+
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-400 px-1 pt-1">Available Now</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {documentTools.map((tool) => {
+                          const isSelected = isDocumentToolSelected(tool, location);
+                          return (
+                            <NavLink
+                              key={tool.name}
+                              to={tool.path}
+                              onClick={closeAll}
+                              className={`p-2.5 rounded-xl border text-xs font-bold transition-colors block text-center shadow-2xs ${isSelected
+                                ? "bg-orange-500 border-orange-500 text-white"
+                                : "bg-white border-gray-200/80 text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                              {tool.name}
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+
+                      <p className="text-[10px] font-black uppercase tracking-wide text-gray-400 px-1 pt-1">Coming Soon</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {documentComingSoon.map((tool) => (
+                          <div
+                            key={tool.name}
+                            className="p-2.5 rounded-xl border border-gray-200/80 bg-white text-gray-400 text-xs font-bold text-center shadow-2xs cursor-not-allowed"
+                          >
+                            {tool.name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
             if (isImage) {
               return (
